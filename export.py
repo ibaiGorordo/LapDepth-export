@@ -4,23 +4,42 @@ import torch
 from model import LDRN
 
 
-parser = argparse.ArgumentParser(description='Laplacian Depth Residual Network training on KITTI',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+def get_model_name(args):
+    dataset = args.pretrained.lower()
+    model_name = f"lap-depth-{dataset}"
+    if args.use_kitti_grad:
+        model_name += "-grad"
+    return model_name
+
+
+def get_model_dir(model_name):
+    return model_name.replace("-", "_") + ".pkl"
+
+
+def download_model(model_name, file_name):
+    from huggingface_hub import hf_hub_download
+    downloaded_model_path = hf_hub_download(repo_id=f"ibaiGorordo/{model_name}", filename=file_name)
+    args.model_dir = downloaded_model_path
+
+
+parser = argparse.ArgumentParser(description='Laplacian Depth Residual Network training on KITTI',
+                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Directory setting
 parser.add_argument('--input_shape', type=int, nargs='+', default=[352, 1216], help='image size')
-parser.add_argument('--model_dir', type=str, default = "", help='pretrained model directory')
+parser.add_argument('--model_dir', type=str, default="", help='pretrained model directory')
 parser.add_argument('--use_kitti_grad', action='store_true')
 
-parser.add_argument('--pretrained', type=str, default = "KITTI", help='KITTI or NYU')
-parser.add_argument('--norm', type=str, default = "BN")
-parser.add_argument('--n_Group', type=int, default = 32)
-parser.add_argument('--reduction', type=int, default = 16)
-parser.add_argument('--act', type=str, default = "ReLU")
+parser.add_argument('--pretrained', type=str, default="KITTI", help='KITTI or NYU')
+parser.add_argument('--norm', type=str, default="BN")
+parser.add_argument('--n_Group', type=int, default=32)
+parser.add_argument('--reduction', type=int, default=16)
+parser.add_argument('--act', type=str, default="ReLU")
 parser.add_argument('--max_depth', default=80.0, type=float, metavar='MaxVal', help='max value of depth')
 parser.add_argument('--lv6', action='store_true', help='use lv6 Laplacian decoder')
 
 # GPU setting
-parser.add_argument('--rank', type=int,   help='node rank for distributed training', default=0)
+parser.add_argument('--rank', type=int, help='node rank for distributed training', default=0)
 
 args = parser.parse_args()
 
@@ -31,22 +50,15 @@ elif args.pretrained == 'NYU':
     args.max_depth = 10.0
     # assert (args.input_shape[0] == 432), "NYU pretrained model only supports 432xN input size"
 
-grad = '' if not args.use_kitti_grad else '_grad'
-model_name = f"{args.pretrained}{grad}"
+model_name = get_model_name(args)
 
 # Download model if not provided
-if args.model_dir == "" :
-    args.model_dir = f'{model_name}.pkl'
+if args.model_dir == "":
+    args.model_dir = get_model_dir(model_name)
 
-if not os.path.isfile(f'{model_name}.pkl'):
-    import gdown
-
-    if args.pretrained == 'KITTI' and args.use_kitti_grad:
-        gdown.download(id="1Xxxo3Zw4kVwBw43i6akQqjX2Go8vdP4H", output=f'{model_name}.pkl', quiet=False)
-    elif args.pretrained == 'KITTI' and not args.use_kitti_grad:
-        gdown.download(id="10Fsw3KbhiKj-rRkoIesghSPCn84TYY5P", output=f'{model_name}.pkl', quiet=False)
-    elif args.pretrained == 'NYU':
-        gdown.download(id="13WyHCmQINyzprCerkOBT_Pf_W-PbWzBi", output=f'{model_name}.pkl', quiet=False)
+if not os.path.isfile(args.model_dir):
+    print(f"Downloading model {model_name} to {args.model_dir}")
+    download_model(model_name, args.model_dir)
 
 print('=> loading model..')
 Model = LDRN(args)

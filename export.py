@@ -30,17 +30,6 @@ parser.add_argument('--input_shape', type=int, nargs='+', default=[352, 1216], h
 parser.add_argument('--pretrained', type=str, default="KITTI", help='KITTI or NYU')
 parser.add_argument('--use_kitti_grad', action='store_true')
 parser.add_argument('--model_dir', type=str, default="", help='pretrained model directory')
-
-parser.add_argument('--norm', type=str, default="BN")
-parser.add_argument('--n_Group', type=int, default=32)
-parser.add_argument('--reduction', type=int, default=16)
-parser.add_argument('--act', type=str, default="ReLU")
-parser.add_argument('--max_depth', default=80.0, type=float, metavar='MaxVal', help='max value of depth')
-parser.add_argument('--lv6', action='store_true', help='use lv6 Laplacian decoder')
-
-# GPU setting
-parser.add_argument('--rank', type=int, help='node rank for distributed training', default=0)
-
 args = parser.parse_args()
 
 if args.pretrained == 'KITTI':
@@ -58,7 +47,7 @@ if args.model_dir == "":
     download_model(model_name, args.model_dir)
 
 print('=> loading model..')
-Model = LDRN(lv6=args.lv6, norm=args.norm, rank=args.rank, act=args.act, max_depth=args.max_depth)
+Model = LDRN(max_depth=args.max_depth)
 Model = torch.nn.DataParallel(Model)
 Model.load_state_dict(torch.load(args.model_dir, map_location=torch.device('cpu')), strict=False)
 Model.eval()

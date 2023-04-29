@@ -1,21 +1,7 @@
 import torch
-from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
-import os
-import math
-import itertools
-import torchvision
-import torchvision.transforms as transforms
 import torchvision.models as models
-import numpy as np
-from IPython import display
-import matplotlib as mpl
-#from option import args
-if os.environ.get('DISPLAY','') == '':
-    #print('no display found. Using non-interactive Agg backend')
-    mpl.use('Agg')
-import matplotlib.pyplot as plt
 from torch.jit import script
 import geffnet
 
@@ -138,7 +124,7 @@ class deepFeatureExtractor_ResNext101(nn.Module):
         # after passing Layer1 : H/4  x W/4
         # after passing Layer2 : H/8  x W/8
         # after passing Layer3 : H/16 x W/16
-        self.encoder = models.resnext101_32x8d(pretrained=True)
+        self.encoder = models.resnext101_32x8d(weights=models.ResNeXt101_32X8D_Weights.DEFAULT)
         self.fixList = ['layer1.0','layer1.1','.bn']
         self.lv6 = lv6
 
@@ -187,7 +173,7 @@ class deepFeatureExtractor_VGG19(nn.Module):
         # after passing 26th layer   : H/8  x W/8
         # after passing 39th layer   : H/16 x W/16
         # after passing 52th layer   : H/32 x W/32
-        self.encoder = models.vgg19_bn(pretrained=True)
+        self.encoder = models.vgg19_bn(weights=True)
         del self.encoder.avgpool
         del self.encoder.classifier
         if lv6 is True:
@@ -225,7 +211,7 @@ class deepFeatureExtractor_DenseNet161(nn.Module):
     def __init__(self,args, lv6 = False):
         super(deepFeatureExtractor_DenseNet161, self).__init__()
         self.args = args
-        self.encoder = models.densenet161(pretrained=True)
+        self.encoder = models.densenet161(weights=True)
         self.lv6 = lv6
         del self.encoder.classifier
         del self.encoder.features.norm5
@@ -268,7 +254,7 @@ class deepFeatureExtractor_InceptionV3(nn.Module):
     def __init__(self,args, lv6 = False):
         super(deepFeatureExtractor_InceptionV3, self).__init__()
         self.args = args
-        self.encoder = models.inception_v3(pretrained=True)
+        self.encoder = models.inception_v3(weights=True)
         self.encoder.aux_logits = False
         self.lv6 = lv6
         del self.encoder.AuxLogits
@@ -312,7 +298,7 @@ class deepFeatureExtractor_MobileNetV2(nn.Module):
         # after passing 3th : H/8  x W/8
         # after passing 4th : H/16 x W/16
         # after passing 5th : H/32 x W/32
-        self.encoder = models.mobilenet_v2(pretrained=True)
+        self.encoder = models.mobilenet_v2(weights=True)
         del self.encoder.classifier
         self.layerList = [1, 3, 6, 13, 18]
         self.dimList = [16, 24, 32, 96, 960]
@@ -343,7 +329,7 @@ class deepFeatureExtractor_ResNet101(nn.Module):
         # after passing Layer1 : H/4  x W/4
         # after passing Layer2 : H/8  x W/8
         # after passing Layer3 : H/16 x W/16
-        self.encoder = models.resnet101(pretrained=True)
+        self.encoder = models.resnet101(weights=True)
         self.fixList = ['layer1.0','layer1.1','.bn']
 
         if lv6 is True:
@@ -390,35 +376,35 @@ class deepFeatureExtractor_EfficientNet(nn.Module):
                                     "EfficientNet-B4", "EfficientNet-B5", "EfficientNet-B6", "EfficientNet-B7"]
         
         if architecture == "EfficientNet-B0":
-            self.encoder = geffnet.tf_efficientnet_b0_ns(pretrained=True)
+            self.encoder = geffnet.tf_efficientnet_b0_ns(weights=True)
             self.dimList = [16, 24, 40, 112, 1280] #5th feature is extracted after conv_head or bn2
             #self.dimList = [16, 24, 40, 112, 320] #5th feature is extracted after blocks[6]
         elif architecture == "EfficientNet-B1":
-            self.encoder = geffnet.tf_efficientnet_b1_ns(pretrained=True)
+            self.encoder = geffnet.tf_efficientnet_b1_ns(weights=True)
             self.dimList = [16, 24, 40, 112, 1280] #5th feature is extracted after conv_head or bn2
             #self.dimList = [16, 24, 40, 112, 320] #5th feature is extracted after blocks[6]
         elif architecture == "EfficientNet-B2":
-            self.encoder = geffnet.tf_efficientnet_b2_ns(pretrained=True)
+            self.encoder = geffnet.tf_efficientnet_b2_ns(weights=True)
             self.dimList = [16, 24, 48, 120, 1408] #5th feature is extracted after conv_head or bn2
             #self.dimList = [16, 24, 48, 120, 352] #5th feature is extracted after blocks[6]
         elif architecture == "EfficientNet-B3":
-            self.encoder = geffnet.tf_efficientnet_b3_ns(pretrained=True)
+            self.encoder = geffnet.tf_efficientnet_b3_ns(weights=True)
             self.dimList = [24, 32, 48, 136, 1536] #5th feature is extracted after conv_head or bn2
             #self.dimList = [24, 32, 48, 136, 384] #5th feature is extracted after blocks[6]
         elif architecture == "EfficientNet-B4":
-            self.encoder = geffnet.tf_efficientnet_b4_ns(pretrained=True)
+            self.encoder = geffnet.tf_efficientnet_b4_ns(weights=True)
             self.dimList = [24, 32, 56, 160, 1792] #5th feature is extracted after conv_head or bn2
             #self.dimList = [24, 32, 56, 160, 448] #5th feature is extracted after blocks[6]
         elif architecture == "EfficientNet-B5":
-            self.encoder = geffnet.tf_efficientnet_b5_ns(pretrained=True)
+            self.encoder = geffnet.tf_efficientnet_b5_ns(weights=True)
             self.dimList = [24, 40, 64, 176, 2048] #5th feature is extracted after conv_head or bn2
             #self.dimList = [24, 40, 64, 176, 512] #5th feature is extracted after blocks[6]
         elif architecture == "EfficientNet-B6":
-            self.encoder = geffnet.tf_efficientnet_b6_ns(pretrained=True)
+            self.encoder = geffnet.tf_efficientnet_b6_ns(weights=True)
             self.dimList = [32, 40, 72, 200, 2304] #5th feature is extracted after conv_head or bn2
             #self.dimList = [32, 40, 72, 200, 576] #5th feature is extracted after blocks[6]
         elif architecture == "EfficientNet-B7":
-            self.encoder = geffnet.tf_efficientnet_b7_ns(pretrained=True)
+            self.encoder = geffnet.tf_efficientnet_b7_ns(weights=True)
             self.dimList = [32, 48, 80, 224, 2560] #5th feature is extracted after conv_head or bn2
             #self.dimList = [32, 48, 80, 224, 640] #5th feature is extracted after blocks[6]
         if args.rank == 0:

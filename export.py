@@ -11,7 +11,6 @@ parser.add_argument('--input_shape', type=int, nargs='+', default=[352, 1216], h
 parser.add_argument('--model_dir', type=str, default = "", help='pretrained model directory')
 parser.add_argument('--use_kitti_grad', action='store_true')
 
-parser.add_argument('--encoder', type=str, default = "ResNext101")
 parser.add_argument('--pretrained', type=str, default = "KITTI", help='KITTI or NYU')
 parser.add_argument('--norm', type=str, default = "BN")
 parser.add_argument('--n_Group', type=int, default = 32)

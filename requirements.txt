@@ -1,4 +1,5 @@
 onnx-simplifier
 onnxruntime
+onnx
 gdown
 geffnet

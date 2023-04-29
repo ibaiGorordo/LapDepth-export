@@ -130,9 +130,9 @@ class myConv(nn.Module):
 
 # Deep Feature Fxtractor
 class deepFeatureExtractor_ResNext101(nn.Module):
-    def __init__(self, args, lv6=False):
+    def __init__(self, lv6=False):
         super(deepFeatureExtractor_ResNext101, self).__init__()
-        self.args = args
+
         # after passing ReLU   : H/2  x W/2
         # after passing Layer1 : H/4  x W/4
         # after passing Layer2 : H/8  x W/8
@@ -317,25 +317,25 @@ class Dilated_bottleNeck_lv6(nn.Module):
 
 # Laplacian Decoder Network
 class Lap_decoder_lv5(nn.Module):
-    def __init__(self, args, dimList):
+    def __init__(self, dimList, norm="BN", rank=0, act='ReLU', max_depth=80):
         super(Lap_decoder_lv5, self).__init__()
-        norm = args.norm
+
         conv = conv_ws
         if norm == 'GN':
-            if args.rank == 0:
+            if rank == 0:
                 print("==> Norm: GN")
         else:
-            if args.rank == 0:
+            if rank == 0:
                 print("==> Norm: BN")
 
-        if args.act == 'ELU':
+        if act == 'ELU':
             act = 'ELU'
-        elif args.act == 'Mish':
+        elif act == 'Mish':
             act = 'Mish'
         else:
             act = 'ReLU'
         kSize = 3
-        self.max_depth = args.max_depth
+        self.max_depth = max_depth
         self.ASPP = Dilated_bottleNeck(norm, act, dimList[3])
         self.dimList = dimList
         ############################################     Pyramid Level 5     ###################################################
@@ -474,25 +474,25 @@ class Lap_decoder_lv5(nn.Module):
 
 
 class Lap_decoder_lv6(nn.Module):
-    def __init__(self, args, dimList):
+    def __init__(self, dimList, norm="BN", rank=0, act='ReLU', max_depth=80):
         super(Lap_decoder_lv6, self).__init__()
-        norm = args.norm
+        norm = norm
         conv = conv_ws
         if norm == 'GN':
-            if args.rank == 0:
+            if rank == 0:
                 print("==> Norm: GN")
         else:
-            if args.rank == 0:
+            if rank == 0:
                 print("==> Norm: BN")
 
-        if args.act == 'ELU':
+        if act == 'ELU':
             act = 'ELU'
-        elif args.act == 'Mish':
+        elif act == 'Mish':
             act = 'Mish'
         else:
             act = 'ReLU'
         kSize = 3
-        self.max_depth = args.max_depth
+        self.max_depth = max_depth
         self.ASPP = Dilated_bottleNeck_lv6(norm, act, dimList[4])
         dimList[4] = dimList[4] // 2
         self.dimList = dimList
@@ -659,15 +659,15 @@ class Lap_decoder_lv6(nn.Module):
 
 # Laplacian Depth Residual Network
 class LDRN(nn.Module):
-    def __init__(self, args):
+    def __init__(self, lv6=False, norm="BN", rank=0, act='ReLU', max_depth=80):
         super(LDRN, self).__init__()
-        lv6 = args.lv6
-        self.encoder = deepFeatureExtractor_ResNext101(args, lv6)
+
+        self.encoder = deepFeatureExtractor_ResNext101(lv6)
 
         if lv6 is True:
-            self.decoder = Lap_decoder_lv6(args, self.encoder.dimList)
+            self.decoder = Lap_decoder_lv6(self.encoder.dimList, norm, rank, act, max_depth)
         else:
-            self.decoder = Lap_decoder_lv5(args, self.encoder.dimList)
+            self.decoder = Lap_decoder_lv5(self.encoder.dimList, norm, rank, act, max_depth)
 
     def forward(self, x):
         out_featList = self.encoder(x)

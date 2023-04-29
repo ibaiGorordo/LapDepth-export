@@ -23,16 +23,14 @@ parser.add_argument('--lv6', action='store_true', help='use lv6 Laplacian decode
 # GPU setting
 parser.add_argument('--rank', type=int,   help='node rank for distributed training', default=0)
 
-
-
 args = parser.parse_args()
 
 if args.pretrained == 'KITTI':
     args.max_depth = 80.0
-    assert (args.input_shape[0] == 352), "KITTI pretrained model only supports 352xN input size"
+    # assert (args.input_shape[0] == 352), "KITTI pretrained model only supports 352xN input size"
 elif args.pretrained == 'NYU':
     args.max_depth = 10.0
-    assert (args.input_shape[0] == 432), "NYU pretrained model only supports 432xN input size"
+    # assert (args.input_shape[0] == 432), "NYU pretrained model only supports 432xN input size"
 
 grad = '' if not args.use_kitti_grad else '_grad'
 model_name = f"{args.pretrained}{grad}"
@@ -72,7 +70,3 @@ with torch.no_grad():
 
     # Simplify ONNX
     os.system(f'onnxsim {model_name}.onnx {model_name}.onnx')
-
-
-
-

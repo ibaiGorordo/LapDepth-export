@@ -34,10 +34,8 @@ args = parser.parse_args()
 
 if args.pretrained == 'KITTI':
     args.max_depth = 80.0
-    # assert (args.input_shape[0] == 352), "KITTI pretrained model only supports 352xN input size"
 elif args.pretrained == 'NYU':
     args.max_depth = 10.0
-    # assert (args.input_shape[0] == 432), "NYU pretrained model only supports 432xN input size"
 
 model_name = get_model_name(args)
 

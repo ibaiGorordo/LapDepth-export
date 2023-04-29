@@ -37,6 +37,9 @@ if args.pretrained == 'KITTI':
 elif args.pretrained == 'NYU':
     args.max_depth = 10.0
 
+output_names = [f'lap_lv{level}' for level in range(5, 0, -1)]
+output_names.append('final_depth')
+
 model_name = get_model_name(args)
 
 # Download model if not provided
@@ -61,7 +64,7 @@ with torch.no_grad():
                       verbose=True,
                       opset_version=11,
                       input_names=['input'],
-                      output_names=['output'])
+                      output_names=output_names)
 
     # Simplify ONNX
     os.system(f'onnxsim {model_name}.onnx {model_name}.onnx')
